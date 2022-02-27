@@ -1,13 +1,54 @@
-const http = require("http");
-const server = http.createServer((req, res) => {
-  res.writeHead(200, {
-    "Content-Type": "text/html",
-  });
-  res.end("<h1>Hello World</h1>");
+const express = require("express");
+const PORT = process.env.PORT || 3000;
+const app = express();
+
+const friends = [
+  {
+    id: 1,
+    name: "Ahmed",
+    age: 20,
+  },
+  {
+    id: 2,
+    name: "Ali",
+    age: 50,
+  },
+];
+
+app.use((req, res, next) => {
+  const start = Date.now();
+  next();
+  const delta = Date.now();
+  console.log(`Request took ${delta - start} ms`);
 });
 
-// lesson 7, 7
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`);
+  next();
+});
 
-server.listen(3000, () => {
-    console.log("Server running on port 3000");
-})
+app.use(express.json());
+
+app.get("/", (req, res) => {
+  res.status(200).json(friends);
+});
+
+app.get("/friend/:friendId", (req, res) => {
+  const id = req.params.friendId;
+  res.status(200).json(friends.find((friend) => friend.id === parseInt(id)));
+});
+
+app.post("/", (req, res) => {
+  if (!req?.body?.name || !req?.body?.age) {
+    return res.status(400).json({
+      error: "Name and age are required",
+    });
+  }
+  const { name, age } = req.body;
+  friends.push({ id: friends.length + 1, name, age });
+  res.status(req.body ? 201 : 400).json(friends);
+});
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT} 🚀🚀🚀`);
+});
